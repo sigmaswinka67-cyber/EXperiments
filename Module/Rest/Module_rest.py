@@ -117,12 +117,16 @@ def build_rest_list(data):
 
     now = datetime.now(UTC3)
 
-    profiles = load_json("profiles.json")
+    profiles_raw = load_json("profiles.json")
+    profiles = {
+        p.get("username", "").lower(): p.get("role", "нет роли")
+        for p in profiles_raw.values()
+    }
 
     active = []
     finished = []
 
-    for key, v in data.items():
+    for v in data.values():
 
         if v["end_datetime"] == "неопределенный":
             active.append(v)
@@ -134,6 +138,7 @@ def build_rest_list(data):
 
         if now <= end_dt:
             active.append(v)
+
         elif now <= end_dt + timedelta(days=7):
             finished.append(v)
 
@@ -150,13 +155,7 @@ def build_rest_list(data):
         for i, v in enumerate(active, 1):
 
             username = v["username"]
-
-            role = "нет роли"
-
-            for uid, p in profiles.items():
-                if p.get("username") and p["username"].lower() == username.lower():
-                    role = p.get("role") or "нет роли"
-                    break
+            role = profiles.get(username.lower(), "нет роли")
 
             mention = f'<a href="https://t.me/{username}">@{username}</a> | {role}'
 
@@ -189,15 +188,9 @@ def build_rest_list(data):
         for i, v in enumerate(finished, 1):
 
             username = v["username"]
+            role = profiles.get(username.lower(), "нет роли")
 
-            role = "нет роли"
-
-            for uid, p in profiles.items():
-                if p.get("username") and p["username"].lower() == username.lower():
-                    role = p.get("role") or "нет роли"
-                    break
-
-            mention = f"@{username} | {role}"
+            mention = f'<a href="https://t.me/{username}">@{username}</a> | {role}'
 
             text += (
                 f"{i}. {mention}\n"
