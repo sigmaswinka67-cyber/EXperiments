@@ -44,15 +44,6 @@ def set_bot(bot: Bot):
 # JSON
 # =========================
 
-def load_json(file):
-    if not os.path.exists(file):
-        return {}
-    with open(file, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-def save_json(file, data):
-    with open(file, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
 
 # =========================
 # ДОСТУП
@@ -547,6 +538,7 @@ async def restlist(message: Message):
     text = build_rest_list(data)
 
     await message.answer(text)
+
 
 
 
