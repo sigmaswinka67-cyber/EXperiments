@@ -31,36 +31,44 @@ UTC3 = timezone(timedelta(hours=3))
 
 # ================= ДОСТУП =================
 
+# ================= ДОСТУП =================
+
 def get_owner():
     data = load_json(DATA_PATH)
     return str(data.get("OWNER_ID"))
 
+
+def is_owner(user_id: int):
+    return str(user_id) == get_owner()
+
+
 def is_admin(user_id: int):
 
-    if str(user_id) == get_owner():
+    # владелец всегда админ
+    if is_owner(user_id):
         return True
 
     admins = load_json(ADMINS_FILE)
     return str(user_id) in admins
 
 
-def get_position(user_id):
+def has_access(user_id: int):
+    """
+    Доступ к админским функциям
+    (админ или владелец)
+    """
+    return is_admin(user_id)
 
-    if str(user_id) == get_owner():
+
+def get_position(user_id: int):
+
+    if is_owner(user_id):
         return "создатель"
 
     if is_admin(user_id):
         return "админ"
 
     return "участник"
-
-def has_access(user_id: int):
-
-    if str(user_id) == get_owner():
-        return True
-
-    admins = load_json(ADMINS_FILE)
-    return str(user_id) in admins
 
 
 # ================= ПРОФИЛИ =================
@@ -213,7 +221,7 @@ async def profile_edit_info(callback: CallbackQuery):
 
 # ================= СОЗДАТЬ ПРОФИЛЬ =================
 
-@router.message(F.text.startswith("!!создать профиль"))
+@router.message(F.text == "!!создать профиль")
 async def create_profile(message: Message):
 
     if not has_access(message.from_user.id):
