@@ -54,6 +54,14 @@ def get_position(user_id):
 
     return "участник"
 
+def has_access(user_id: int):
+
+    if str(user_id) == get_owner():
+        return True
+
+    admins = load_json(ADMINS_FILE)
+    return str(user_id) in admins
+
 
 # ================= ПРОФИЛИ =================
 
@@ -208,7 +216,7 @@ async def profile_edit_info(callback: CallbackQuery):
 @router.message(F.text.startswith("!!создать профиль"))
 async def create_profile(message: Message):
 
-    if not is_admin(message.from_user.id):
+    if not has_access(message.from_user.id):
         return
 
     target = await get_target_user(message)
@@ -297,7 +305,7 @@ async def edit_profile(message: Message):
     if not target:
         return
 
-    if target.id != message.from_user.id and not is_admin(message.from_user.id):
+    if target.id != message.from_user.id and not has_access(message.from_user.id):
         await message.reply("❌ Можно редактировать только свой профиль.")
         return
 
@@ -312,7 +320,7 @@ async def edit_profile(message: Message):
     caller = message.from_user.id
     user_id = target.id
 
-    if is_admin(caller):
+    if has_access(caller):
         kb.button(text="Роль", callback_data=f"role_{user_id}_{caller}")
 
     if caller == user_id:
@@ -375,7 +383,7 @@ async def ask_role(callback: CallbackQuery):
     if callback.from_user.id != int(caller):
         return await callback.answer()
 
-    if not is_admin(callback.from_user.id):
+    if not has_access(callback.from_user.id):
         return await callback.answer()
 
     waiting_role[callback.from_user.id] = user_id
