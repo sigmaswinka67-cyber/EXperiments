@@ -137,10 +137,10 @@ def build_rest_list(data):
         ).replace(tzinfo=UTC3)
 
         if now <= end_dt:
-            active.append(v)
+            active.append((v, end_dt))
 
         elif now <= end_dt + timedelta(days=7):
-            finished.append(v)
+            finished.append((v, end_dt))
 
     text = "📋 <b>Список рестов</b>\n\n"
 
@@ -152,22 +152,24 @@ def build_rest_list(data):
         text += "Нет активных рестов.\n\n"
 
     else:
-        for i, v in enumerate(active, 1):
+        for i, item in enumerate(active, 1):
+
+            if isinstance(item, tuple):
+                v, end_dt = item
+            else:
+                v = item
+                end_dt = None
 
             username = v["username"]
             role = profiles.get(username.lower(), "нет роли")
 
-            mention = f'<a href="https://t.me/{username}">@{username}</a> | {role}'
+            mention = f"@{username} | {role}"
 
             if v["end_datetime"] == "неопределенный":
 
                 text += f"{i}. {mention}\nнеопределенный\n\n"
 
             else:
-
-                end_dt = datetime.strptime(
-                    v["end_datetime"], "%Y-%m-%d %H:%M"
-                ).replace(tzinfo=UTC3)
 
                 remaining = format_remaining(end_dt)
 
@@ -185,17 +187,19 @@ def build_rest_list(data):
         text += "Нет завершённых рестов."
 
     else:
-        for i, v in enumerate(finished, 1):
+        for i, (v, end_dt) in enumerate(finished, 1):
 
             username = v["username"]
             role = profiles.get(username.lower(), "нет роли")
 
-            mention = f'<a href="https://t.me/{username}">@{username}</a> | {role}'
+            mention = f"@{username} | {role}"
 
             text += (
                 f"{i}. {mention}\n"
                 f"Рест закончился: {v['end_datetime']}\n\n"
             )
+
+    return text
 
     return text
 
