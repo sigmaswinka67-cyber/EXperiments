@@ -1,0 +1,51 @@
+{
+    "@kafka_kofe1314": {
+        "username": "Kafka_kofe1314",
+        "start_datetime": "2026-03-02 00:00",
+        "end_datetime": "2026-03-05 18:00",
+        "group_id": -1003643921038,
+        "notified": false
+    },
+    "@kurugugu": {
+        "username": "Kurugugu",
+        "start_datetime": "2026-03-02 00:00",
+        "end_datetime": "2026-03-19 18:00",
+        "group_id": -1003643921038,
+        "notified": false
+    },
+    "@debugg4r": {
+        "username": "Debugg4R",
+        "start_datetime": "2026-03-02 00:00",
+        "end_datetime": "2026-03-24 18:00",
+        "group_id": -1003643921038,
+        "notified": false
+    },
+    "@fusyaTAKCA": {
+        "username": "fusyaTAKCA",
+        "start_datetime": "2026-03-07 00:00",
+        "end_datetime": "2026-03-30 18:00",
+        "group_id": -1003643921038,
+        "notified": false
+    },
+    "@shashlik_03": {
+        "username": "Shashlik_03",
+        "start_datetime": "2026-03-02 23:23",
+        "end_datetime": "неопределенный",
+        "group_id": -1003643921038,
+        "notified": false
+    },
+    "@rinbl0": {
+        "username": "RinBL0",
+        "start_datetime": "2026-03-02 23:23",
+        "end_datetime": "неопределенный",
+        "group_id": -1003643921038,
+        "notified": false
+    },
+    "aris_c0m": {
+        "username": "aris_c0m",
+        "start_datetime": "2026-03-04 15:51",
+        "end_datetime": "неопределенный",
+        "group_id": -1003643921038,
+        "notified": false
+    }
+}
