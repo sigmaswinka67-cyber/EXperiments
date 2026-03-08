@@ -29,7 +29,7 @@ sha_cache = {}
 push_queue = set()
 
 last_push = 0
-PUSH_DELAY = 20
+PUSH_DELAY = 5
 
 lock = threading.Lock()
 
@@ -150,5 +150,6 @@ def push_file(file):
         sha_cache[file] = r.json()["content"]["sha"]
 
     else:
+
 
         print("GitHub error:", r.text)
