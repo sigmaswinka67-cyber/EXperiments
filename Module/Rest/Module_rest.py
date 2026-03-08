@@ -356,21 +356,42 @@ async def delete_rest_user(message: Message):
     if not is_admin(message.from_user.id):
         return
 
-    parts = message.text.split()
-
-    if len(parts) < 3:
-        await message.reply("❌ Использование:\n!!удалить рест @username")
-        return
-
-    username = parts[2]
-
-    if not username.startswith("@"):
-        await message.reply("❌ Нужно указать @username")
-        return
-
-    username = username.replace("@", "").lower()
-
     data = load_json(VACATIONS_FILE)
+    username = None
+
+    # ================= УДАЛЕНИЕ ЧЕРЕЗ REPLY =================
+    if message.reply_to_message:
+
+        user = message.reply_to_message.from_user
+
+        if not user.username:
+            await message.reply("❌ У пользователя нет username.")
+            return
+
+        username = user.username.lower()
+
+    # ================= УДАЛЕНИЕ ЧЕРЕЗ @username =================
+    else:
+
+        parts = message.text.split()
+
+        if len(parts) < 3:
+            await message.reply(
+                "❌ Использование:\n"
+                "!!удалить рест @username\n"
+                "или ответьте на сообщение пользователя."
+            )
+            return
+
+        username = parts[2]
+
+        if not username.startswith("@"):
+            await message.reply("❌ Нужно указать @username")
+            return
+
+        username = username.replace("@", "").lower()
+
+    # ================= УДАЛЕНИЕ =================
 
     if username in data:
         del data[username]
@@ -378,7 +399,6 @@ async def delete_rest_user(message: Message):
         await message.reply("✅ Пользователь удалён из реста.")
     else:
         await message.reply("❌ Этот пользователь не находится в ресте.")
-
 # =========================
 # /restlist с КД (красивый таймер)
 # =========================
