@@ -157,7 +157,7 @@ def build_rest_list(data):
             username = v["username"]
             role = profiles.get(username.lower(), "нет роли")
 
-            user_link = f'<a href="tg://resolve?domain={username}">@{username}</a>'
+            user_link = f'<a href="tg://resolve?domain={username}">{username}</a>'
 
             if v["end_datetime"] == "неопределенный":
 
@@ -186,7 +186,7 @@ def build_rest_list(data):
             username = v["username"]
             role = profiles.get(username.lower(), "нет роли")
 
-            user_link = f'<a href="tg://resolve?domain={username}">@{username}</a>'
+            user_link = f'<a href="tg://resolve?domain={username}">{username}</a>'
 
             text += (
                 f"{i}. {user_link} | {role}\n"
