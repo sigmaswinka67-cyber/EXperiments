@@ -1,107 +1,65 @@
-import sys
 import os
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-
-from database import load_json, save_json
-import json
-import os
-from aiogram import Bot
-from aiogram import Router, F
+from aiogram import Bot, Router, F
 from aiogram.types import (
     Message,
     CallbackQuery,
     InlineKeyboardMarkup,
     InlineKeyboardButton
 )
-from aiogram.filters import Command
 from aiogram.exceptions import TelegramBadRequest
 
+from database import load_json, save_json
 
 router = Router()
 bot_instance: Bot | None = None
-import os
-
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 DATA_PATH = "Data.json"
 ADMINS_FILE = "admins.json"
 
-# ================= ПОИСК ПОЛЬЗОВАТЕЛЯ =================
 
-async def find_user(message: Message):
+# ================= БОТ =================
 
-    # если ответ на сообщение
-    if message.reply_to_message:
-        return message.reply_to_message.from_user
-
-    parts = message.text.split()
-
-    if len(parts) < 2:
-        return None
-
-    target = parts[1]
-
-    # ================= ID =================
-    if target.isdigit():
-        try:
-            return await bot_instance.get_chat(int(target))
-        except:
-            pass
-
-    # ================= USERNAME =================
-    if target.startswith("@"):
-
-        username = target.replace("@", "").lower()
-
-        # поиск в profiles.json
-        try:
-            from Module.Profile.Module_profile import load_profiles
-            profiles = load_profiles()
-
-            for uid, p in profiles.items():
-                if p.get("username") and p["username"].lower() == username:
-                    return await bot_instance.get_chat(int(uid))
-        except:
-            pass
-
-        # попытка через telegram
-        try:
-            return await bot_instance.get_chat(target)
-        except:
-            pass
-
-    return None
-
-# ================= JSON =================
+def set_bot(bot: Bot):
+    global bot_instance
+    bot_instance = bot
 
 
 # ================= ДОСТУП =================
 
 def get_owner():
     data = load_json(DATA_PATH)
-    return data.get("OWNER_ID")
+    return str(data.get("OWNER_ID"))
+
+
 def is_owner(user_id: int):
-    return str(user_id) == str(get_owner())
+    return str(user_id) == get_owner()
+
 
 def is_admin(user_id: int):
-    if str(user_id) == str(get_owner()):
+
+    if is_owner(user_id):
         return True
 
     admins = load_json(ADMINS_FILE)
+
     return str(user_id) in admins
+
 
 # ================= SAFE EDIT =================
 
 async def safe_edit(message, text, markup):
+
     try:
         await message.edit_text(text, reply_markup=markup)
     except TelegramBadRequest:
         pass
 
+
 # ================= КНОПКИ =================
 
 def admin_keyboard():
+
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="➕ Добавить админа", callback_data="a_add")],
@@ -112,11 +70,54 @@ def admin_keyboard():
         ]
     )
 
-# ================= Овнер имя =================
 
-def set_bot(bot: Bot):
-    global bot_instance
-    bot_instance = bot
+# ================= ПОИСК ПОЛЬЗОВАТЕЛЯ =================
+
+async def find_user(message: Message):
+
+    if message.reply_to_message:
+        return message.reply_to_message.from_user
+
+    parts = message.text.split()
+
+    if len(parts) < 2:
+        return None
+
+    target = parts[1]
+
+    # ===== ID =====
+    if target.isdigit():
+        try:
+            return await bot_instance.get_chat(int(target))
+        except:
+            return None
+
+    # ===== USERNAME =====
+    if target.startswith("@"):
+
+        username = target.replace("@", "").lower()
+
+        try:
+            from Module.Profile.Module_profile import load_profiles
+
+            profiles = load_profiles()
+
+            for uid, p in profiles.items():
+
+                if p.get("username") and p["username"].lower() == username:
+                    return await bot_instance.get_chat(int(uid))
+
+        except:
+            pass
+
+        try:
+            return await bot_instance.get_chat(target)
+        except:
+            return None
+
+    return None
+
+
 # ================= CALLBACK =================
 
 @router.callback_query(F.data.startswith("a_"))
@@ -127,35 +128,39 @@ async def admin_callbacks(callback: CallbackQuery):
         return
 
     if callback.data == "a_add":
+
         text = (
-            "➕ <b>Добавить админа</b>\n"
-            "Добавить админа:\n"
-            "!!выдать админа @username\n\n"
+            "➕ <b>Добавить админа</b>\n\n"
+            "Команда:\n"
+            "!!выдать админа @username"
         )
 
     elif callback.data == "a_owner":
+
         text = (
-            "🔰 <b>Передать Создателя</b>\n"
-            "Передать владельца:\n"
-            "!!передать владельца @username\n\n"
+            "🔰 <b>Передать Создателя</b>\n\n"
+            "Команда:\n"
+            "!!передать владельца @username"
         )
 
+    elif callback.data == "a_del":
+
+        text = (
+            "❌ <b>Снять админа</b>\n\n"
+            "Команда:\n"
+            "!!снять админа @username"
+        )
 
     elif callback.data == "a_list":
 
         text = await build_admin_list()
 
-    elif callback.data == "a_del":
-        text = (
-            "❌ <b>Снять админа</b>\n"
-            "Для удаления админа:\n"
-            "!!снять админа @username\n\n"
-        )
-
     await safe_edit(callback.message, text, admin_keyboard())
+
     await callback.answer()
 
-# ================= ЛИСТ =================
+
+# ================= СПИСОК АДМИНОВ =================
 
 async def build_admin_list():
 
@@ -165,65 +170,56 @@ async def build_admin_list():
 
     text = "📋 <b>Лист администрации</b>\n\n"
 
-    # ================= СОЗДАТЕЛЬ =================
-    text += "🔰 <b>Создатель:</b>\n\n"
+    # ===== СОЗДАТЕЛЬ =====
 
-    owner_display = "Не назначен"
+    text += "🔰 <b>Создатель</b>\n\n"
 
-    if owner:
+    try:
 
-        role = ""
-        if str(owner) in profiles:
-            role = profiles[str(owner)].get("role") or "нет роли"
+        chat = await bot_instance.get_chat(int(owner))
+        name = chat.full_name
 
-        # если хранится ID
-        if str(owner).isdigit() and bot_instance:
-            try:
-                chat = await bot_instance.get_chat(int(owner))
-                name = chat.full_name
-                owner_display = f'<a href="tg://user?id={chat.id}">{name}</a> | {role}'
+        role = profiles.get(owner, {}).get("role", "нет роли")
 
-            except:
-                owner_display = f"<code>{owner}</code> | {role}"
+        text += f"1. <a href='tg://user?id={chat.id}'>{name}</a> | {role}\n\n"
 
-        elif str(owner).startswith("@"):
-            owner_display = f"{owner} | {role}"
+    except:
 
-        else:
-            owner_display = f"<code>{owner}</code> | {role}"
+        text += f"1. <code>{owner}</code>\n\n"
 
-    text += f"1. {owner_display}\n\n"
+    # ===== АДМИНЫ =====
 
-    # ================= АДМИНЫ =================
-    text += "❇️ <b>Админы:</b>\n\n"
+    text += "❇️ <b>Админы</b>\n\n"
 
     if not admins:
         text += "Нет админов."
-    else:
-        for i, (admin_id, data) in enumerate(admins.items(), 1):
+        return text
 
-            username = data.get("username")
+    for i, admin_id in enumerate(admins, 1):
 
-            role = "нет роли"
-            if admin_id in profiles:
-                role = profiles[admin_id].get("role") or "нет роли"
+        role = profiles.get(admin_id, {}).get("role", "нет роли")
 
-            try:
-                chat = await bot_instance.get_chat(int(admin_id))
-                name = chat.full_name
-                admin_display = f'<a href="tg://user?id={chat.id}">{name}</a> | {role}'
-            except:
-                    admin_display = f"<code>{admin_id}</code> | {role}"
+        try:
 
-            text += f"{i}. {admin_display}\n"
+            chat = await bot_instance.get_chat(int(admin_id))
+            name = chat.full_name
+
+            display = f"<a href='tg://user?id={chat.id}'>{name}</a> | {role}"
+
+        except:
+
+            display = f"<code>{admin_id}</code> | {role}"
+
+        text += f"{i}. {display}\n"
 
     return text
-# ================= КОМАНДЫ =================
+
+
+# ================= ВЫДАТЬ АДМИНА =================
 
 @router.message(F.text.startswith("!!выдать админа"))
 async def add_admin(message: Message):
 
-    # доступ только owner
     if not is_owner(message.from_user.id):
         return
 
@@ -233,20 +229,14 @@ async def add_admin(message: Message):
         await message.reply("❌ Пользователь не найден.")
         return
 
-    # нельзя выдать самому себе
     if user.id == message.from_user.id:
         await message.reply("❌ Нельзя выдать админку самому себе.")
-        return
-
-    # нельзя выдать owner
-    if str(user.id) == str(get_owner()):
-        await message.reply("❌ Этот пользователь уже владелец.")
         return
 
     admins = load_json(ADMINS_FILE)
 
     if str(user.id) in admins:
-        await message.reply("⚠️ Этот пользователь уже админ.")
+        await message.reply("⚠️ Уже админ.")
         return
 
     admins[str(user.id)] = {
@@ -256,6 +246,10 @@ async def add_admin(message: Message):
     save_json(ADMINS_FILE, admins)
 
     await message.reply(f"✅ @{user.username or user.id} добавлен в админы.")
+
+
+# ================= СНЯТЬ АДМИНА =================
+
 @router.message(F.text.startswith("!!снять админа"))
 async def remove_admin(message: Message):
 
@@ -268,8 +262,7 @@ async def remove_admin(message: Message):
         await message.reply("❌ Пользователь не найден.")
         return
 
-    # нельзя снять owner
-    if str(user.id) == str(get_owner()):
+    if str(user.id) == get_owner():
         await message.reply("❌ Нельзя снять владельца.")
         return
 
@@ -284,10 +277,14 @@ async def remove_admin(message: Message):
     save_json(ADMINS_FILE, admins)
 
     await message.reply("✅ Админ снят.")
+
+
+# ================= ПЕРЕДАТЬ ВЛАДЕЛЬЦА =================
+
 @router.message(F.text.startswith("!!передать владельца"))
 async def give_owner(message: Message):
 
-    if message.from_user.id != get_owner():
+    if not is_owner(message.from_user.id):
         return
 
     user = await find_user(message)
@@ -296,12 +293,11 @@ async def give_owner(message: Message):
         await message.reply("❌ Пользователь не найден.")
         return
 
-    new_owner = user.id
-
     data = load_json(DATA_PATH)
-    data["OWNER_ID"] = new_owner
-    save_json(DATA_PATH, data)
 
+    data["OWNER_ID"] = user.id
+
+    save_json(DATA_PATH, data)
 
     await message.reply("🔰 Создатель передан.")
 
