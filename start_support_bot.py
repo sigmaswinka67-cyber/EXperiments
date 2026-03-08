@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -7,7 +8,7 @@ from aiogram.enums import ParseMode
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
 
-# ===== ПОДКЛЮЧАЕМ МОДУЛИ =====
+# ===== МОДУЛИ =====
 from Module.Admin import Module_admin
 from Module.Rest import Module_rest
 from Module.Profile import Module_profile
@@ -15,8 +16,6 @@ from Module.Profile import Module_profile
 # =========================
 # CONFIG
 # =========================
-
-import os
 
 BASE_DIR = os.path.dirname(__file__)
 DATA_PATH = os.path.join(BASE_DIR, "Data.json")
@@ -41,6 +40,15 @@ bot = Bot(
 
 dp = Dispatcher()
 
+# =========================
+# SAFE CALLBACK
+# =========================
+
+async def safe_callback(callback):
+    try:
+        await callback.answer()
+    except:
+        pass
 
 # =========================
 # ГЛАВНОЕ МЕНЮ
@@ -70,14 +78,14 @@ async def menu(message: Message):
         reply_markup=main_menu()
     )
 
-
 # =========================
-# REST (ЗАПУСКАЕТ ФЛУД МОДУЛЬ)
+# REST
 # =========================
 
 @dp.callback_query(lambda c: c.data == "rest")
 async def open_rests(callback):
-    await callback.answer()
+
+    await safe_callback(callback)
 
     if not Module_rest.is_admin(callback.from_user.id):
         await callback.answer("Нет доступа", show_alert=True)
@@ -88,14 +96,14 @@ async def open_rests(callback):
         reply_markup=Module_rest.main_keyboard()
     )
 
-
 # =========================
 # ADMIN
 # =========================
 
 @dp.callback_query(lambda c: c.data == "admin")
 async def open_admin(callback):
-    await callback.answer()
+
+    await safe_callback(callback)
 
     if not Module_admin.is_admin(callback.from_user.id):
         await callback.answer("Нет доступа", show_alert=True)
@@ -107,11 +115,13 @@ async def open_admin(callback):
     )
 
 # =========================
-# Profile
+# PROFILES
 # =========================
+
 @dp.callback_query(lambda c: c.data == "profiles")
 async def open_profiles(callback):
-    await callback.answer()
+
+    await safe_callback(callback)
 
     if not Module_profile.is_admin(callback.from_user.id):
         await callback.answer("Нет доступа", show_alert=True)
@@ -122,19 +132,19 @@ async def open_profiles(callback):
         reply_markup=Module_profile.profile_keyboard()
     )
 
-
 # =========================
-# НАЗАД В ГЛАВНОЕ МЕНЮ
+# НАЗАД
 # =========================
 
 @dp.callback_query(lambda c: c.data == "back_main")
 async def back(callback):
-    await callback.answer()
+
+    await safe_callback(callback)
+
     await callback.message.edit_text(
         "ℹ️ Выберите раздел:",
         reply_markup=main_menu()
     )
-
 
 # =========================
 # ПОДКЛЮЧЕНИЕ МОДУЛЕЙ
@@ -149,17 +159,17 @@ dp.include_router(Module_rest.router)
 Module_profile.set_bot(bot)
 dp.include_router(Module_profile.router)
 
-
 # =========================
 # ЗАПУСК
 # =========================
 
 async def main():
+
     print("Support Bot v1 запущен")
+
     await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
-
     asyncio.run(main())
 
