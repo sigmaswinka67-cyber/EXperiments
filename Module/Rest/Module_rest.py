@@ -129,7 +129,7 @@ def build_rest_list(data):
     for v in data.values():
 
         if v["end_datetime"] == "неопределенный":
-            active.append(v)
+            active.append((v, None))
             continue
 
         end_dt = datetime.strptime(
@@ -152,29 +152,23 @@ def build_rest_list(data):
         text += "Нет активных рестов.\n\n"
 
     else:
-        for i, item in enumerate(active, 1):
-
-            if isinstance(item, tuple):
-                v, end_dt = item
-            else:
-                v = item
-                end_dt = None
+        for i, (v, end_dt) in enumerate(active, 1):
 
             username = v["username"]
             role = profiles.get(username.lower(), "нет роли")
 
-            mention = f"@{username} | {role}"
+            user_link = f'<a href="tg://resolve?domain={username}">@{username}</a>'
 
             if v["end_datetime"] == "неопределенный":
 
-                text += f"{i}. {mention}\nнеопределенный\n\n"
+                text += f"{i}. {user_link} | {role}\nнеопределенный\n\n"
 
             else:
 
                 remaining = format_remaining(end_dt)
 
                 text += (
-                    f"{i}. {mention}\n"
+                    f"{i}. {user_link} | {role}\n"
                     f"{v['start_datetime']} → {v['end_datetime']}\n"
                     f"(осталось: {remaining})\n\n"
                 )
@@ -192,16 +186,15 @@ def build_rest_list(data):
             username = v["username"]
             role = profiles.get(username.lower(), "нет роли")
 
-            mention = f"@{username} | {role}"
+            user_link = f'<a href="tg://resolve?domain={username}">@{username}</a>'
 
             text += (
-                f"{i}. {mention}\n"
+                f"{i}. {user_link} | {role}\n"
                 f"Рест закончился: {v['end_datetime']}\n\n"
             )
 
     return text
 
-    return text
 
 # ================= ОЧИСТКА =================
 
