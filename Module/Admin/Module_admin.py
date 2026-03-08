@@ -76,16 +76,6 @@ async def find_user(message: Message):
 # ================= JSON =================
 
 
-def load_json(path):
-    if not os.path.exists(path):
-        return {}
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-def save_json(path, data):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
-
 # ================= ДОСТУП =================
 
 def get_owner():
@@ -314,6 +304,7 @@ async def give_owner(message: Message):
 
 
     await message.reply("🔰 Создатель передан.")
+
 
 
 
