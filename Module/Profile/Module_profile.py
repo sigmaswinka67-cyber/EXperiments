@@ -160,6 +160,48 @@ def profile_keyboard():
         ]
     )
 
+# =========================
+# ОПИСАНИЕ КОМАНД
+# =========================
+
+
+@router.callback_query(lambda c: c.data == "profile_create")
+async def profile_create_info(callback: CallbackQuery):
+
+    await callback.answer()
+
+    await callback.message.edit_text(
+        "➕ <b>Создать профиль</b>\n"
+        "Используйте:\n"
+        "!!создать профиль",
+        reply_markup=profile_keyboard()
+    )
+
+
+@router.callback_query(lambda c: c.data == "profile_view")
+async def profile_view_info(callback: CallbackQuery):
+
+    await callback.answer()
+
+    await callback.message.edit_text(
+        "👤 <b>Профиль</b>\n"
+        "Для просмотра используйте:\n"
+        "!!профиль @username или в ответ на сообщение",
+        reply_markup=profile_keyboard()
+    )
+
+
+@router.callback_query(lambda c: c.data == "profile_edit")
+async def profile_edit_info(callback: CallbackQuery):
+
+    await callback.answer()
+
+    await callback.message.edit_text(
+        "⚙ <b>Редактировать профиль</b>\n"
+        "Используйте:\n"
+        "!!редактировать профиль @username или в ответ",
+        reply_markup=profile_keyboard()
+    )
 
 # ================= СОЗДАТЬ ПРОФИЛЬ =================
 
