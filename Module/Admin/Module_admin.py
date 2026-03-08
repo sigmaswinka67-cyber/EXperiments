@@ -75,6 +75,7 @@ def admin_keyboard():
 
 async def find_user(message: Message):
 
+    # ===== REPLY =====
     if message.reply_to_message:
         return message.reply_to_message.from_user
 
@@ -83,7 +84,8 @@ async def find_user(message: Message):
     if len(parts) < 2:
         return None
 
-    target = parts[1]
+    # берем последний аргумент команды
+    target = parts[-1]
 
     # ===== ID =====
     if target.isdigit():
@@ -97,6 +99,7 @@ async def find_user(message: Message):
 
         username = target.replace("@", "").lower()
 
+        # поиск через profiles.json
         try:
             from Module.Profile.Module_profile import load_profiles
 
@@ -110,6 +113,7 @@ async def find_user(message: Message):
         except:
             pass
 
+        # прямой запрос Telegram
         try:
             return await bot_instance.get_chat(target)
         except:
