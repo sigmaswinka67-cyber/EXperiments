@@ -47,5 +47,12 @@
         "end_datetime": "неопределенный",
         "group_id": -1003643921038,
         "notified": false
+    },
+    "alkogoichik": {
+        "username": "alkogoichik",
+        "start_datetime": "2026-03-08 17:22",
+        "end_datetime": "неопределенный",
+        "group_id": -1003815813423,
+        "notified": false
     }
 }
