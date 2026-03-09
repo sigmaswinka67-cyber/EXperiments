@@ -1,7 +1,7 @@
 import asyncio
 import json
 import os
-
+import requests
 from aiogram import Bot, Dispatcher, F
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -211,3 +211,4 @@ async def main():
 if __name__ == "__main__":
 
     asyncio.run(main())
+
