@@ -180,14 +180,34 @@ def setup_modules():
 # START
 # =========================
 
+async def bot_ping():
+
+    while True:
+
+        try:
+            requests.post(
+                "https://checkbot-production-b44c.up.railway.app/bot_activity",
+                json={
+                    "bot_id": "Alko_bot",
+                    "status": "working"
+                }
+            )
+        except:
+            pass
+
+        await asyncio.sleep(55)
+        
 async def main():
 
     setup_modules()
 
     print("Support Bot запущен")
 
+    asyncio.create_task(bot_ping())
+
     await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
+
     asyncio.run(main())
