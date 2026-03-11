@@ -54,5 +54,12 @@
         "end_datetime": "неопределенный",
         "group_id": -1003643921038,
         "notified": false
+    },
+    "torakisser": {
+        "username": "torakisser",
+        "start_datetime": "2026-03-11 17:05",
+        "end_datetime": "неопределенный",
+        "group_id": -1003643921038,
+        "notified": false
     }
 }
