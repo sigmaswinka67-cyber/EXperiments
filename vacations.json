@@ -68,5 +68,12 @@
         "end_datetime": "2026-03-31 18:00",
         "group_id": -1003643921038,
         "notified": false
+    },
+    "estr3per": {
+        "username": "estr3per",
+        "start_datetime": "2026-03-14 00:00",
+        "end_datetime": "2026-03-31 18:00",
+        "group_id": -1003643921038,
+        "notified": false
     }
 }
