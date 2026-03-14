@@ -274,11 +274,12 @@ async def add_user_vacation(message: Message):
 
     parts = message.text.split()
 
-    if len(parts) < 3:
+    if len(parts) < 4:
         await message.reply(
             "❌ Использование:\n"
             "!!добавить рест @username YYYY-MM-DD YYYY-MM-DD\n"
             "!!добавить рест @username 2 недели\n"
+            "!!добавить рест @username 1 месяц\n"
             "!!добавить рест @username ?"
         )
         return
@@ -292,12 +293,14 @@ async def add_user_vacation(message: Message):
     clean_username = username_raw.replace("@", "").lower()
 
     data = load_json(VACATIONS_FILE)
+
     now = datetime.now(UTC3)
     start_dt = now
     end_dt = None
 
-    # Неопределённый рест
-    if len(parts) == 4 and parts[3] == "?":
+    # ================= НЕОПРЕДЕЛЕННЫЙ РЕСТ =================
+    if parts[3] == "?":
+
         data[clean_username] = {
             "username": clean_username,
             "start_datetime": start_dt.strftime("%Y-%m-%d %H:%M"),
@@ -305,35 +308,59 @@ async def add_user_vacation(message: Message):
             "group_id": message.chat.id,
             "notified": False
         }
+
         save_json(VACATIONS_FILE, data)
+
         await message.reply("✅ Добавлен неопределённый рест.")
         return
 
-    # Даты или недели/месяцы
-    if len(parts) >= 5:
+    # ================= РЕСТ ПО ДАТАМ =================
+    # !!добавить рест @user 2026-03-10 2026-03-20
+    if len(parts) >= 5 and "-" in parts[3]:
+
         try:
-            start_dt = datetime.strptime(parts[2], "%Y-%m-%d").replace(tzinfo=UTC3)
-            end_dt = datetime.strptime(parts[3], "%Y-%m-%d").replace(
-                hour=18, minute=0, tzinfo=UTC3
+            start_dt = datetime.strptime(parts[3], "%Y-%m-%d").replace(tzinfo=UTC3)
+
+            end_dt = datetime.strptime(parts[4], "%Y-%m-%d").replace(
+                hour=18,
+                minute=0,
+                tzinfo=UTC3
             )
+
         except:
-            try:
-                amount = int(parts[2])
-                unit = parts[3].lower()
+            await message.reply("❌ Неверный формат даты.\nПример: 2026-03-10")
+            return
 
-                if "нед" in unit:
-                    end_dt = now + timedelta(weeks=amount)
-                elif "мес" in unit:
-                    end_dt = now + timedelta(days=30 * amount)
-                else:
-                    return
+    # ================= НЕДЕЛИ / МЕСЯЦЫ =================
+    # !!добавить рест @user 2 недели
+    # !!добавить рест @user 1 месяц
+    elif len(parts) >= 5:
 
-                end_dt = end_dt.replace(hour=18, minute=0, tzinfo=UTC3)
-            except:
+        try:
+            amount = int(parts[3])
+            unit = parts[4].lower()
+
+            if "нед" in unit:
+                end_dt = now + timedelta(weeks=amount)
+
+            elif "мес" in unit:
+                end_dt = now + timedelta(days=30 * amount)
+
+            else:
+                await message.reply("❌ Нужно указать недели или месяцы.")
                 return
 
-    if not end_dt:
+            end_dt = end_dt.replace(hour=18, minute=0, tzinfo=UTC3)
+
+        except:
+            await message.reply("❌ Неверный формат команды.")
+            return
+
+    else:
+        await message.reply("❌ Неверный формат команды.")
         return
+
+    # ================= СОХРАНЕНИЕ =================
 
     data[clean_username] = {
         "username": clean_username,
@@ -344,6 +371,7 @@ async def add_user_vacation(message: Message):
     }
 
     save_json(VACATIONS_FILE, data)
+
     await message.reply("✅ Рест выдан.")
 
 # =========================
