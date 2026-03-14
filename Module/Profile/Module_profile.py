@@ -31,38 +31,22 @@ UTC3 = timezone(timedelta(hours=3))
 
 # ================= ДОСТУП =================
 
-# ================= ДОСТУП =================
-
 def get_owner():
     data = load_json(DATA_PATH)
     return str(data.get("OWNER_ID"))
 
-
-def is_owner(user_id: int):
-    return str(user_id) == get_owner()
-
-
 def is_admin(user_id: int):
 
-    # владелец всегда админ
-    if is_owner(user_id):
+    if str(user_id) == get_owner():
         return True
 
     admins = load_json(ADMINS_FILE)
     return str(user_id) in admins
 
 
-def has_access(user_id: int):
-    """
-    Доступ к админским функциям
-    (админ или владелец)
-    """
-    return is_admin(user_id)
+def get_position(user_id):
 
-
-def get_position(user_id: int):
-
-    if is_owner(user_id):
+    if str(user_id) == get_owner():
         return "создатель"
 
     if is_admin(user_id):
@@ -110,19 +94,26 @@ def get_rest_status(username):
 
     data = load_json(VACATIONS_FILE)
 
-    username = username.lower()
-
-    if username not in data:
+    if not username:
         return "нету"
 
-    v = data[username]
+    username = username.lower()
+
+    # ищем ключ и с @ и без
+    v = data.get(username) or data.get("@" + username)
+
+    if not v:
+        return "нету"
 
     if v["end_datetime"] == "неопределенный":
         return "неопределенный"
 
-    end_dt = datetime.strptime(
-        v["end_datetime"], "%Y-%m-%d %H:%M"
-    ).replace(tzinfo=UTC3)
+    try:
+        end_dt = datetime.strptime(
+            v["end_datetime"], "%Y-%m-%d %H:%M"
+        ).replace(tzinfo=UTC3)
+    except:
+        return "нету"
 
     now = datetime.now(UTC3)
 
@@ -221,10 +212,10 @@ async def profile_edit_info(callback: CallbackQuery):
 
 # ================= СОЗДАТЬ ПРОФИЛЬ =================
 
-@router.message(F.text == "!!создать профиль")
+@router.message(F.text.startswith("!!создать профиль"))
 async def create_profile(message: Message):
 
-    if not has_access(message.from_user.id):
+    if not is_admin(message.from_user.id):
         return
 
     target = await get_target_user(message)
@@ -313,7 +304,7 @@ async def edit_profile(message: Message):
     if not target:
         return
 
-    if target.id != message.from_user.id and not has_access(message.from_user.id):
+    if target.id != message.from_user.id and not is_admin(message.from_user.id):
         await message.reply("❌ Можно редактировать только свой профиль.")
         return
 
@@ -328,7 +319,7 @@ async def edit_profile(message: Message):
     caller = message.from_user.id
     user_id = target.id
 
-    if has_access(caller):
+    if is_admin(caller):
         kb.button(text="Роль", callback_data=f"role_{user_id}_{caller}")
 
     if caller == user_id:
@@ -391,7 +382,7 @@ async def ask_role(callback: CallbackQuery):
     if callback.from_user.id != int(caller):
         return await callback.answer()
 
-    if not has_access(callback.from_user.id):
+    if not is_admin(callback.from_user.id):
         return await callback.answer()
 
     waiting_role[callback.from_user.id] = user_id
